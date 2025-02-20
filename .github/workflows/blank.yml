@@ -50,5 +50,5 @@ jobs:
       # pytestを実行
       - name: Pytest
         run: |
-          python -m pytest fizzBuzzTest.py
+          python -m pytest python-test/fizzBuzzTest.py
         continue-on-error: true
