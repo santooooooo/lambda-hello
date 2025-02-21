@@ -46,10 +46,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pipenv
-          pipenv install --dev
+          pipenv sync --dev
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
-        run: |
-          pipenv run test python-test/fizzBuzzTest.py
+        run: pipenv run test python-test/fizzBuzzTest.py
         continue-on-error: true
