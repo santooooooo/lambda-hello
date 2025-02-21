@@ -56,5 +56,5 @@ jobs:
 
       # テスト結果を出力
       - name: Test Result
-        if: failure()
+        if: !failure()
         run: echo "Test Failed"
