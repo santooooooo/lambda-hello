@@ -50,5 +50,10 @@ jobs:
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
-        run: pipenv run test test/fizzBuzzTest.py --junitxml junit/test-results.xml
+        run: pipenv run test -v -s test/fizzBuzzTest.py
         continue-on-error: true
+
+      # テスト結果を出力
+      - name: Test Result
+        if: ${{ failure() }}
+        run: echo "Test Failed"
