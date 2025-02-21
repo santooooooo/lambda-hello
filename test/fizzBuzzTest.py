@@ -1,5 +1,5 @@
 import unittest
-import fizzBuzz
+from modules.fizzBuzz import fizzBuzz
 
 class FizzBuzzTest(unittest.TestCase):
     def setUp(self):
@@ -9,17 +9,16 @@ class FizzBuzzTest(unittest.TestCase):
         pass
 
     def test_normal(self):
-        self.assertEqual(fizzBuzz.fizzbuzz(1), 1)
+        self.assertEqual(fizzBuzz(1), 1)
 
     def test_fizz(self):
-        self.assertEqual(fizzBuzz.fizzbuzz(3), 'Fizz')
+        self.assertEqual(fizzBuzz(3), 'Fizz')
 
     def test_buzz(self):
-        self.assertEqual(fizzBuzz.fizzbuzz(5), 'Buzz')
+        self.assertEqual(fizzBuzz(5), 'Buzz')
 
     def test_fizz_buzz(self):
-        self.assertEqual(fizzBuzz.fizzbuzz(15), 'FzzBuzz')
+        self.assertEqual(fizzBuzz(15), 'FizzBuzz')
 
 if __name__ == '__main__':
-    print(__name__)
     unittest.main()
