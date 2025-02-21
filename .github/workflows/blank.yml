@@ -50,16 +50,16 @@ jobs:
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
-        id: pytest-in-pipenv
+        id: pytest_in_pipenv
         run: pipenv run test -v -s test/fizzBuzzTest.py
         continue-on-error: true
 
       # テスト結果を出力
       - name: Test Success
-        if: success() && steps.pytest-in-pipenv.outcome == 'success'
+        if: success() && steps.pytest_in_pipenv.outcome == 'success'
         run: echo "Test Success"
 
       # テスト結果を出力
       - name: Test Failue
-        if: failure() && steps.pytest-in-pipenv.outcome == 'failure'
+        if: failure() && steps.pytest_in_pipenv.outcome == 'failure'
         run: echo "Test Failed"
