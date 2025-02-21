@@ -50,5 +50,5 @@ jobs:
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
-        run: pipenv run test python-test/fizzBuzzTest.py
+        run: pipenv run test test/fizzBuzzTest.py
         continue-on-error: true
