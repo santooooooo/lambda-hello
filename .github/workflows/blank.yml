@@ -55,6 +55,11 @@ jobs:
         continue-on-error: true
 
       # テスト結果を出力
-      - name: Test Result
-        if: !failure()
+      - name: Test Success
+        if: success()
+        run: echo "Test Success"
+
+      # テスト結果を出力
+      - name: Test Failue
+        if: failure()
         run: echo "Test Failed"
