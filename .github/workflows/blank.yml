@@ -56,10 +56,10 @@ jobs:
 
       # テスト結果を出力
       - name: Test Success
-        if: success()
+        if: success() && steps.pytest-in-pipenv.outcome == 'success'
         run: echo "Test Success"
 
       # テスト結果を出力
       - name: Test Failue
-        if: failure()
+        if: failure() && steps.pytest-in-pipenv.outcome == 'failure'
         run: echo "Test Failed"
