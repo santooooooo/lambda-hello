@@ -50,10 +50,11 @@ jobs:
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
+        id: pytest-in-pipenv
         run: pipenv run test -v -s test/fizzBuzzTest.py
         continue-on-error: true
 
       # テスト結果を出力
       - name: Test Result
-        if: ${{ failure() }}
+        if: failure() && steps.pytest-in-pipenv.outcome == 'failure'
         run: echo "Test Failed"
