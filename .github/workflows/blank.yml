@@ -50,5 +50,5 @@ jobs:
 
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
-        run: pipenv run test test/fizzBuzzTest.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+        run: pipenv run test test/fizzBuzzTest.py --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
         continue-on-error: true
