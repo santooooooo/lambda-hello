@@ -61,5 +61,5 @@ jobs:
 
       # テスト結果を出力
       - name: Test Failue
-        if: failure() && steps.pytest_in_pipenv.outcome == 'failure'
+        if: steps.pytest_in_pipenv.outcome == 'failure'
         run: echo "Test Failed"
