@@ -51,7 +51,7 @@ jobs:
       # pipenv内のpytestを実行
       - name: Pytest In Pipenv
         id: pytest_in_pipenv
-        run: pipenv run test -v -s test/fizzBuzzTest.py
+        run: pipenv run test -v -s test
         continue-on-error: true
 
       # テスト結果を出力
