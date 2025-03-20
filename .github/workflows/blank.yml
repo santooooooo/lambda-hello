@@ -36,10 +36,10 @@ jobs:
           echo test, and deploy your project.
       
       # pythonのセットアップ
-      - name: Set up python3.13
+      - name: Set up python3.8
         uses: actions/setup-python@v2
         with:
-          python-version: '3.13'
+          python-version: '3.8'
       
       # pip/pyenvをインストール
       - name: Install dependencies
@@ -52,15 +52,3 @@ jobs:
       - name: Pytest In Pipenv
         id: pytest_in_pipenv
         run: pipenv run test -v -s test
-
-      # テスト結果を出力
-      - name: Test Success
-        if: success() && steps.pytest_in_pipenv.outcome == 'success'
-        run: echo "Test Success"
-
-      # テスト結果を出力
-      - name: Test Failue
-        if: steps.pytest_in_pipenv.outcome == 'failure'
-        run: |
-          echo "Test Failed"
-          exit 1
