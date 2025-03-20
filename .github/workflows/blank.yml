@@ -36,7 +36,7 @@ jobs:
           echo test, and deploy your project.
       
       # pythonのセットアップ
-      - name: Set up python3.8
+      - name: Set up python3.13
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
@@ -48,7 +48,12 @@ jobs:
           pip install pipenv
           pipenv install --dev
 
-      # pipenv内のpytestを実行
+      # lintを実行
+      - name: flake8 In Pipenv
+        id: flake8_in_pipenv
+        run: pipenv run test flake8
+
+      # testを実行
       - name: Pytest In Pipenv
         id: pytest_in_pipenv
         run: pipenv run test -v -s test

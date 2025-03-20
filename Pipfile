@@ -5,12 +5,14 @@ name = "pypi"
 
 [packages]
 pytest = "*"
+flake8 = "*"
 
 [dev-packages]
 pytest = "*"
 
 [requires]
-python_version = "3.13"
+python_version = "3.8"
 
 [scripts]
 test = "pytest"
+flake8 = "flake8"
