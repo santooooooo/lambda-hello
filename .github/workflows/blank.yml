@@ -51,7 +51,7 @@ jobs:
       # lintを実行
       - name: flake8 In Pipenv
         id: flake8_in_pipenv
-        run: pipenv run test flake8
+        run: pipenv run flake8
 
       # testを実行
       - name: Pytest In Pipenv
