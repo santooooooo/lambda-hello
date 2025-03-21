@@ -1,13 +1,14 @@
 name: ecr push image
 
 on:
-  pull_request:
-    # PRが閉じたタイミングで実行
-    types:
-      - closed
-    # mainブランチのみを対象とする
-    branches:
-      - main
+    push:
+#   pull_request:
+#     # PRが閉じたタイミングで実行
+#     types:
+#       - closed
+#     # mainブランチのみを対象とする
+#     branches:
+#       - main
 
 
 jobs:
