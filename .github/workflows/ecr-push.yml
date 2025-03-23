@@ -1,4 +1,4 @@
-name: ecr push image
+name: push ecr image and update aws batch definition
 
 on:
   push:
