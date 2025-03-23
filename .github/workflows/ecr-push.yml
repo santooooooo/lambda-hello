@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           NEW_REVISION=$(aws batch register-job-definition \
-            --job-definition-name $JOB_DEFINITION_NAME
+            --job-definition-name $JOB_DEFINITION_NAME \
             --type container \
             --container-properties "{
               \"image\": \"$ECR_IMAGE_NAME\",
