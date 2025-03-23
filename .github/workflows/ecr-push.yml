@@ -58,7 +58,7 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          REVISION=$(aws batch describe-job-definitions --job-definition-name aws-batch-4 --status ACTIVE --query "jobDefinitions[0].revision")
+          REVISION=$(aws batch describe-job-definitions --job-definition-name ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }} --status ACTIVE --query "jobDefinitions[0].revision")
 
           echo "##[set-output name=revision;]$REVISION"
           echo "##[set-output name=job-definition;]JobDefinition"
@@ -68,7 +68,7 @@ jobs:
         env:
           ROLE_ARN: ${{ env.ECR_AND_AWS_BATCH_ROLE }}
           ECR_IMAGE_NAME: ${{ steps.push-ecr.outputs.image }}
-          JOB_DEFINITION_NAME: ${{ steps.get-current-job-definition.outputs.job-definition }}
+          JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
         shell: bash
         run: |
           NEW_REVISION=$(aws batch register-job-definition \
