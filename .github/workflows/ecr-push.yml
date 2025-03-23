@@ -76,7 +76,7 @@ jobs:
             --type container \
             --container-properties "{
               \"image\": \"$ECR_IMAGE_NAME\",
-              \"vcpus\": 0.5,
+              \"vcpus\": 2,
               \"memory\": 512,
               \"jobRoleArn\": \"$ROLE_ARN\"
             }" \
