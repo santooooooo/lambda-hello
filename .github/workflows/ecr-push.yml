@@ -1,4 +1,4 @@
-name: push ecr image and update aws batch definition
+name: push ecr image and register new aws batch definition
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
     # # mainブランチのみを対象とする
     # branches:
     #   - main
+
+env:
+  ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
+  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4"
 
 jobs:
   ECRPushAndDeployToAwsBatch:
@@ -30,20 +34,21 @@ jobs:
         id: login-ecr # outputs で参照するために id を設定
 
       # Docker イメージを build・push する
-      # - name: build and push docker image to ecr
-      #   env:
-      #     # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
-      #     REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      #     # イメージを push する ECR リポジトリ名
-      #     REPOSITORY: "aws-batch"
-      #     # 任意のイメージタグ
-      #     # 今回は Git のコミットハッシュにしておく
-      #     IMAGE_TAG: ${{ github.sha }}
-      #   shell: bash
-      #   run: |
-      #     docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-      #     docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-      #     echo "##[set-output name=image;]$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - name: build and push docker image to ecr
+        id: push-ecr
+        env:
+          # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          # イメージを push する ECR リポジトリ名
+          REPOSITORY: "aws-batch"
+          # 任意のイメージタグ
+          # 今回は Git のコミットハッシュにしておく
+          IMAGE_TAG: ${{ github.sha }}
+        shell: bash
+        run: |
+          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          echo "##[set-output name=image;]$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Get current JobDefinition revision
         id: get-current-job-definition
@@ -53,7 +58,28 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          REVISION=$(aws batch describe-job-definitions --job-definition-name JobDefinition --status ACTIVE --query "jobDefinitions[0].revision")
+          REVISION=$(aws batch describe-job-definitions --job-definition-name aws-batch-4 --status ACTIVE --query "jobDefinitions[0].revision")
 
-          echo "revision=$REVISION >> $GITHUB_OUTPUT"
+          echo "##[set-output name=revision;]$REVISION"
           echo "##[set-output name=job-definition;]JobDefinition"
+
+      - name: Register new JobDefinition
+        id: register-new-job-definition
+        env:
+          ROLE_ARN: ${{ env.ECR_AND_AWS_BATCH_ROLE }}
+          ECR_IMAGE_NAME: ${{ steps.push-ecr.outputs.image }}
+          JOB_DEFINITION_NAME: ${{ steps.get-current-job-definition.outputs.job-definition }}
+        shell: bash
+        run: |
+          NEW_REVISION=$(aws batch register-job-definition \
+            --job-definition-name $JOB_DEFINITION_NAME
+            --type container \
+            --container-properties "{
+              \"image\": \"$ECR_IMAGE_NAME\",
+              \"vcpus\": 0.5,
+              \"memory\": 512,
+              \"jobRoleArn\": \"$ROLE_ARN\"
+            }" \
+            --query "revision")
+
+          echo "##[set-output name=revision;]$NEW_REVISION"
