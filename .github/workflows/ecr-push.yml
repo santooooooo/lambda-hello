@@ -55,5 +55,5 @@ jobs:
 
           REVISION=$(aws batch describe-job-definitions --job-definition-name JobDefinition --status ACTIVE --query "jobDefinitions[0].revision")
 
-          echo "##[set-output name=revision;]$REVISION"
+          echo "revision=$REVISION >> $GITHUB_OUTPUT"
           echo "##[set-output name=job-definition;]JobDefinition"
