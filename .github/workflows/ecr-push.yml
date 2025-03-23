@@ -9,10 +9,6 @@ on:
     # branches:
     #   - main
 
-env:
-  BATCH_JOB_DEFINITION: aws/batch/job-definition.json
-  BATCH_JOB_DEFINITION_TEMPLATE: aws/batch/job-definition-template.json
-
 jobs:
   ECRPushAndDeployToAwsBatch:
     runs-on: ubuntu-latest
@@ -47,6 +43,7 @@ jobs:
       #   run: |
       #     docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
       #     docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+      #     echo "##[set-output name=image;]$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
       - name: Get current JobDefinition revision
         id: get-current-job-definition
@@ -56,10 +53,7 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          REVISION=$(aws batch describe-job-definitions \
-            --job-definition-name JobDefinition \  # CFn で作成したジョブ定義の実際の名前
-            --status ACTIVE \
-            --query "jobDefinitions[0].revision")
+          REVISION=$(aws batch describe-job-definitions --job-definition-name JobDefinition --status ACTIVE --query "jobDefinitions[0].revision")
 
           echo "##[set-output name=revision;]$REVISION"
           echo "##[set-output name=job-definition;]JobDefinition"
