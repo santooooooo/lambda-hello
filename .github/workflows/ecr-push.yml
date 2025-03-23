@@ -1,17 +1,20 @@
 name: ecr push image
 
 on:
-  pull_request:
-    # PRが閉じたタイミングで実行
-    types:
-      - closed
-    # mainブランチのみを対象とする
-    branches:
-      - main
+  push:
+    # # PRが閉じたタイミングで実行
+    # types:
+    #   - closed
+    # # mainブランチのみを対象とする
+    # branches:
+    #   - main
 
+env:
+  BATCH_JOB_DEFINITION: aws/batch/job-definition.json
+  BATCH_JOB_DEFINITION_TEMPLATE: aws/batch/job-definition-template.json
 
 jobs:
-  ECRPush:
+  ECRPushAndDeployToAwsBatch:
     runs-on: ubuntu-latest
     # `permissions` を設定しないと OIDC が使えないので注意
     permissions:
@@ -31,15 +34,32 @@ jobs:
         id: login-ecr # outputs で参照するために id を設定
 
       # Docker イメージを build・push する
-      - name: build and push docker image to ecr
-        env:
-          # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          # イメージを push する ECR リポジトリ名
-          REPOSITORY: "aws-batch"
-          # 任意のイメージタグ
-          # 今回は Git のコミットハッシュにしておく
-          IMAGE_TAG: ${{ github.sha }}
+      # - name: build and push docker image to ecr
+      #   env:
+      #     # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
+      #     REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     # イメージを push する ECR リポジトリ名
+      #     REPOSITORY: "aws-batch"
+      #     # 任意のイメージタグ
+      #     # 今回は Git のコミットハッシュにしておく
+      #     IMAGE_TAG: ${{ github.sha }}
+      #   shell: bash
+      #   run: |
+      #     docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+      #     docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+
+      - name: Get current JobDefinition revision
+        id: get-current-job-definition
+        shell: bash
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          if [[ ! $(which aws) > /dev/null ]]; then
+            apt-get update && apt-get install -y awscli
+          fi
+
+          REVISION=$(aws batch describe-job-definitions \
+            --job-definition-name JobDefinition \  # CFn で作成したジョブ定義の実際の名前
+            --status ACTIVE \
+            --query "jobDefinitions[0].revision")
+
+          echo "##[set-output name=revision;]$REVISION"
+          echo "##[set-output name=job-definition;]JobDefinition"
