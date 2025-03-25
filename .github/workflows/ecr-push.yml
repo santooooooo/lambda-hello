@@ -70,7 +70,7 @@ jobs:
           ECR_IMAGE: ${{ steps.push-ecr.outputs.image }}
           JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
           EXECUTION_ROLE_ARN: ${{env.ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE}}
-          BATCH_JOB_DEFITITION: "batch-job-definition.json"
+          # BATCH_JOB_DEFITITION: "batch-job-definition.json"
         shell: bash
         run: |
           cat << EOF > batch-job-definition.json
@@ -120,7 +120,6 @@ jobs:
             "type": "container"
           }
           EOF
-          sed -e "s#__image__#$ECR_IMAGE#" $BATCH_JOB_DEFINITION_TEMPLATE > $BATCH_JOB_DEFINITION
           NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://batch-job-definition.json
 
           echo "##[set-output name=revision;]$NEW_REVISION"
