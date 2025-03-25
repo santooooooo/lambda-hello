@@ -13,6 +13,7 @@ on:
 env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
   AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4"
+  ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE: "arn:aws:iam::955263032402:role/compose-infrastructure-ECSTaskExecutionRole-EHE7YKHPT3WN"
 
 jobs:
   ECRPushAndDeployToAwsBatch:
@@ -68,8 +69,57 @@ jobs:
           ROLE_ARN: ${{ env.ECR_AND_AWS_BATCH_ROLE }}
           ECR_IMAGE: ${{ steps.push-ecr.outputs.image }}
           JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
+          EXECUTION_ROLE_ARN: ${{env.ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE}}
+          BATCH_JOB_DEFITITION: "batch-job-definition.json"
         shell: bash
         run: |
+          cat << EOF > $BATCH_JOB_DIFINITION
+          {
+            "containerOrchestrationType": "ECS",
+            "containerProperties": {
+                "image": $ECR_IMAGE,
+                "command": [],
+                "executionRoleArn": $EXECUTION_ROLE_ARN,
+                "jobRoleArn": $ROLE_ARN
+                "volumes": [],
+                "environment": [],
+                "mountPoints": [],
+                "ulimits": [],
+                "resourceRequirements": [
+                    {
+                        "value": "0.25",
+                        "type": "VCPU"
+                    },
+                    {
+                        "value": "512",
+                        "type": "MEMORY"
+                    }
+                ],
+                "secrets": [],
+                "networkConfiguration": {
+                    "assignPublicIp": "ENABLED",
+                    "interfaceConfigurations": []
+                },
+                "fargatePlatformConfiguration": {
+                    "platformVersion": "LATEST"
+                },
+                "runtimePlatform": {
+                    "operatingSystemFamily": "LINUX",
+                    "cpuArchitecture": "X86_64"
+                }
+            },
+            "jobDefinitionArn": "arn:aws:batch:us-west-1:955263032402:job-definition/aws-batch-4:1",
+            "jobDefinitionName": $JOB_DEFINITION_NAME,
+            "parameters": {},
+            "platformCapabilities": [
+                "FARGATE"
+            ],
+            "revision": 1,
+            "status": "ACTIVE",
+            "tags": {},
+            "type": "container"
+          }
+          EOF
           sed -e "s#__image__#$ECR_IMAGE#" $BATCH_JOB_DEFINITION_TEMPLATE > $BATCH_JOB_DEFINITION
           NEW_REVISION=$(aws batch register-job-definition --job-definition-name $JOB_DEFINITION_NAME --job-definition-arn $ROLE_ARN --cli-input-json file://$BATCH_JOB_DEFINITION)
 
