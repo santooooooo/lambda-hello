@@ -2,12 +2,13 @@ name: push ecr image and register new aws batch definition
 
 on:
   push:
-    # # PRが閉じたタイミングで実行
-    # types:
-    #   - closed
-    # # mainブランチのみを対象とする
-    # branches:
-    #   - main
+    # pull_request:
+    # # # PRが閉じたタイミングで実行
+    #   types:
+    #     - closed
+    #   # mainブランチのみを対象とする
+    #   branches:
+    #     - main
 
 env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
@@ -65,19 +66,11 @@ jobs:
         id: register-new-job-definition
         env:
           ROLE_ARN: ${{ env.ECR_AND_AWS_BATCH_ROLE }}
-          ECR_IMAGE_NAME: ${{ steps.push-ecr.outputs.image }}
+          ECR_IMAGE: ${{ steps.push-ecr.outputs.image }}
           JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
         shell: bash
         run: |
-          NEW_REVISION=$(aws batch register-job-definition \
-            --job-definition-name $JOB_DEFINITION_NAME \
-            --type container \
-            --container-properties "{
-              \"image\": \"$ECR_IMAGE_NAME\",
-              \"vcpus\": 2,
-              \"memory\": 512,
-              \"jobRoleArn\": \"$ROLE_ARN\"
-            }" \
-            --query "revision")
+          sed -e "s#__image__#$ECR_IMAGE#" $BATCH_JOB_DEFINITION_TEMPLATE > $BATCH_JOB_DEFINITION
+          NEW_REVISION=$(aws batch register-job-definition --job-definition-name $JOB_DEFINITION_NAME --job-definition-arn $ROLE_ARN --cli-input-json file://$BATCH_JOB_DEFINITION)
 
           echo "##[set-output name=revision;]$NEW_REVISION"
