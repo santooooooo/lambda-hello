@@ -120,6 +120,7 @@ jobs:
             "type": "container"
           }
           EOF
+
           NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://batch-job-definition.json
 
           echo "##[set-output name=revision;]$NEW_REVISION"
