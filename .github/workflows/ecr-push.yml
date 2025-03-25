@@ -73,7 +73,7 @@ jobs:
           # BATCH_JOB_DEFITITION: "batch-job-definition.json"
         shell: bash
         run: |
-          cat << EOF > batch-job-definition.json
+          cat <<< EOF > batch-job-definition.json
           {
             "containerOrchestrationType": "ECS",
             "containerProperties": {
