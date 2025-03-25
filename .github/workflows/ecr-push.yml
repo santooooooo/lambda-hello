@@ -73,7 +73,7 @@ jobs:
           BATCH_JOB_DEFITITION: "batch-job-definition.json"
         shell: bash
         run: |
-          cat << EOF > $BATCH_JOB_DIFINITION
+          cat << EOF > batch-job-definition.json
           {
             "containerOrchestrationType": "ECS",
             "containerProperties": {
@@ -121,6 +121,6 @@ jobs:
           }
           EOF
           sed -e "s#__image__#$ECR_IMAGE#" $BATCH_JOB_DEFINITION_TEMPLATE > $BATCH_JOB_DEFINITION
-          NEW_REVISION=$(aws batch register-job-definition --job-definition-name $JOB_DEFINITION_NAME --job-definition-arn $ROLE_ARN --cli-input-json file://$BATCH_JOB_DEFINITION)
+          NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://batch-job-definition.json
 
           echo "##[set-output name=revision;]$NEW_REVISION"
