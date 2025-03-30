@@ -12,8 +12,9 @@ on:
 
 env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
-  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4"
+  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4:1"
   ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE: "arn:aws:iam::955263032402:role/compose-infrastructure-ECSTaskExecutionRole-EHE7YKHPT3WN"
+  NEW_TASK_DEFINITION: "new-task-def.json"
 
 jobs:
   ECRPushAndDeployToAwsBatch:
@@ -58,10 +59,9 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          REVISION=$(aws batch describe-job-definitions --job-definition-name ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }} --status ACTIVE --query "jobDefinitions[0].revision")
-
-          echo "##[set-output name=revision;]$REVISION"
-          echo "##[set-output name=job-definition;]JobDefinition"
+          aws ecs describe-task-definition --task-definition aws-batch-4:1 | jq '.taskDefinition | del (.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > task-def.json
+          PREVIOUS_IMAGE_TAG=$(cat task-def.json | jq -r '.containerDefinitions[0].image | split(":")[1]')
+          cat task-def.json | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}"" '.containerDefinitions[0].image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_TASK_DEFINITION}}
 
       - name: Register new JobDefinition
         id: register-new-job-definition
@@ -70,57 +70,7 @@ jobs:
           ECR_IMAGE: ${{ steps.push-ecr.outputs.image }}
           JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
           EXECUTION_ROLE_ARN: ${{env.ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE}}
-          # BATCH_JOB_DEFITITION: "batch-job-definition.json"
         shell: bash
         run: |
-          cat <<< EOF > batch-job-definition.json
-          {
-            "containerOrchestrationType": "ECS",
-            "containerProperties": {
-                "image": $ECR_IMAGE,
-                "command": [],
-                "executionRoleArn": $EXECUTION_ROLE_ARN,
-                "jobRoleArn": $ROLE_ARN
-                "volumes": [],
-                "environment": [],
-                "mountPoints": [],
-                "ulimits": [],
-                "resourceRequirements": [
-                    {
-                        "value": "0.25",
-                        "type": "VCPU"
-                    },
-                    {
-                        "value": "512",
-                        "type": "MEMORY"
-                    }
-                ],
-                "secrets": [],
-                "networkConfiguration": {
-                    "assignPublicIp": "ENABLED",
-                    "interfaceConfigurations": []
-                },
-                "fargatePlatformConfiguration": {
-                    "platformVersion": "LATEST"
-                },
-                "runtimePlatform": {
-                    "operatingSystemFamily": "LINUX",
-                    "cpuArchitecture": "X86_64"
-                }
-            },
-            "jobDefinitionArn": "arn:aws:batch:us-west-1:955263032402:job-definition/aws-batch-4:1",
-            "jobDefinitionName": $JOB_DEFINITION_NAME,
-            "parameters": {},
-            "platformCapabilities": [
-                "FARGATE"
-            ],
-            "revision": 1,
-            "status": "ACTIVE",
-            "tags": {},
-            "type": "container"
-          }
-          EOF
-
-          NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://batch-job-definition.json
-
-          echo "##[set-output name=revision;]$NEW_REVISION"
+          aws ecs register-task-definition --cli-input-json fileb://${{env.NEW_TASK_DEFINITION}}
+          
