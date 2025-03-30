@@ -52,7 +52,7 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
           echo "##[set-output name=image;]$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      - name: Get current JobDefinition revision
+      - name: Get current JobDefinition
         id: get-current-job-definition
         shell: bash
         run: |
@@ -60,7 +60,7 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          aws batch describe-job-definitions --job-definition-name aws-batch-4 --status ACTIVE --query 'jobDefinitions[0]' > job-task-def.json
+          aws batch describe-job-definitions --job-definition-name aws-batch-4 --status ACTIVE --query 'jobDefinitions[0]'| jq '.containerProperties' > ${{env.JOB_TASK_DEFINITION_JSON}}
           PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
           cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
 
