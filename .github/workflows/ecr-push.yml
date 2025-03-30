@@ -14,7 +14,8 @@ env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
   AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4:1"
   ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE: "arn:aws:iam::955263032402:role/compose-infrastructure-ECSTaskExecutionRole-EHE7YKHPT3WN"
-  NEW_TASK_DEFINITION: "new-task-def.json"
+  JOB_TASK_DEFINITION_JSON: "job-task-def.json"
+  NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
 
 jobs:
   ECRPushAndDeployToAwsBatch:
@@ -59,9 +60,9 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          aws ecs describe-task-definition --task-definition aws-batch-4:1 | jq '.taskDefinition | del (.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > task-def.json
-          PREVIOUS_IMAGE_TAG=$(cat task-def.json | jq -r '.containerDefinitions[0].image | split(":")[1]')
-          cat task-def.json | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}"" '.containerDefinitions[0].image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_TASK_DEFINITION}}
+          aws ecs describe-task-definition --task-definition ${{env.AWS_BATCH_JOB_DEFINITION_NAME}} | jq '.taskDefinition | del (.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > ${{env.JOB_TASK_DEFINITION_JSON}}
+          PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
+          cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}"" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
 
       - name: Register new JobDefinition
         id: register-new-job-definition
@@ -72,5 +73,6 @@ jobs:
           EXECUTION_ROLE_ARN: ${{env.ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE}}
         shell: bash
         run: |
-          aws ecs register-task-definition --cli-input-json fileb://${{env.NEW_TASK_DEFINITION}}
+          aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON
+
           
