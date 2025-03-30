@@ -12,7 +12,7 @@ on:
 
 env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
-  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4:1"
+  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4"
   ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE: "arn:aws:iam::955263032402:role/compose-infrastructure-ECSTaskExecutionRole-EHE7YKHPT3WN"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
