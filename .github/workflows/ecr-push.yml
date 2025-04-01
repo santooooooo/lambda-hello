@@ -48,7 +48,6 @@ jobs:
         run: |
           docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          echo "{image}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Get current JobDefinition
         id: get-current-job-definition
@@ -62,7 +61,7 @@ jobs:
           aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType)' > ${{env.JOB_TASK_DEFINITION_JSON}}
           PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
           cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
-          echo "{revision}=$PREVIOUS_REVISION" >> $GITHUB_OUTPUT
+          echo "revision=$PREVIOUS_REVISION" >> $GITHUB_ENV
 
       - name: Register new JobDefinition
         id: register-new-job-definition
