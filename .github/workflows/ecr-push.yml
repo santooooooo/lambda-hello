@@ -1,13 +1,14 @@
 name: push ecr image and register new aws batch definition
 
 on:
-  pull_request:
-  # # PRが閉じたタイミングで実行
-    types:
-      - closed
-    # mainブランチのみを対象とする
-    branches:
-      - main
+  push:
+  # pull_request:
+  # # # PRが閉じたタイミングで実行
+  #   types:
+  #     - closed
+  #   # mainブランチのみを対象とする
+  #   branches:
+  #     - main
 
 env:
   ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
@@ -49,7 +50,7 @@ jobs:
         run: |
           docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          echo "##[set-output name=image;]$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "{image}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Get current JobDefinition
         id: get-current-job-definition
