@@ -72,7 +72,7 @@ jobs:
       - name: Delete previous JobDefinition
         id: delete-previous-job-definition
         env:
-          PREVIOUS_REVISION: ${{steps.get-current-job-definition.outputs.revision}}
+          PREVIOUS_REVISION: ${{env.revision}}
           JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
         shell: bash
         run: |
