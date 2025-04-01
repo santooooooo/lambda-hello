@@ -70,14 +70,14 @@ jobs:
         run: |
           aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON
 
-      - name: Register new JobDefinition
+      - name: Delete previous JobDefinition
         id: delete-previous-job-definition
         env:
           PREVIOUS_REVISION: ${{steps.get-current-job-definition.outputs.revision}}
+          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
         shell: bash
         run: |
-          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
-          PREVIOUS_JOB_DEFINITION=$JOB_DEFINITION_ARN:$PREVIOUS_REVISION
+          PREVIOUS_JOB_DEFINITION=${{env.JOB_DEFINITION_ARN}}:${{env.PREVIOUS_REVISION}}
           aws batch deregister-job-definition --job-definition $PREVIOUS_JOB_DEFINITION
 
           
