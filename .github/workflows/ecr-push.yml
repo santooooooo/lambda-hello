@@ -11,9 +11,7 @@ on:
   #     - main
 
 env:
-  ECR_AND_AWS_BATCH_ROLE: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
-  AWS_BATCH_JOB_DEFINITION_NAME: "aws-batch-4:1"
-  ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE: "arn:aws:iam::955263032402:role/compose-infrastructure-ECSTaskExecutionRole-EHE7YKHPT3WN"
+  JOB_DIFINITION_NAME: "aws-batch-4"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
 
@@ -31,7 +29,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: "us-west-1"
-          role-to-assume: "arn:aws:iam::955263032402:role/lambda-hello-github-actions-ecr-role"
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/lambda-hello-github-actions-ecr-role"
 
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
@@ -60,19 +58,22 @@ jobs:
             apt-get update && apt-get install -y awscli
           fi
 
-          aws batch describe-job-definitions --job-definition-name aws-batch-4 --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType)' > ${{env.JOB_TASK_DEFINITION_JSON}}
+          PREVIOUS_REVISION=(aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0].revision)
+          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType)' > ${{env.JOB_TASK_DEFINITION_JSON}}
           PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
           cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
+          echo "{revision}=PREVIOUS_REVISION" >> $GITHUB_OUTPUT
 
       - name: Register new JobDefinition
         id: register-new-job-definition
-        env:
-          ROLE_ARN: ${{ env.ECR_AND_AWS_BATCH_ROLE }}
-          ECR_IMAGE: ${{ steps.push-ecr.outputs.image }}
-          JOB_DEFINITION_NAME: ${{ env.AWS_BATCH_JOB_DEFINITION_NAME }}
-          EXECUTION_ROLE_ARN: ${{env.ECR_TASK_DEFINITION_TASK_EXECUTION_ROLE}}
         shell: bash
         run: |
           aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON
+
+      # - name: Register new JobDefinition
+      #   id: delete-previous-job-definition
+      #   shell: bash
+      #   run: |
+      #     aws batch deregister-job-definition --job-definition
 
           
