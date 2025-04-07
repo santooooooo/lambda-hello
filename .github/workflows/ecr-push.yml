@@ -67,7 +67,7 @@ jobs:
         id: register-new-job-definition
         shell: bash
         run: |
-          NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON)
+          NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON --query "revision")
           echo "new_revision=$NEW_REVISION" >> $GITHUB_ENV
 
       # - name: Update Cloud Watch Event
