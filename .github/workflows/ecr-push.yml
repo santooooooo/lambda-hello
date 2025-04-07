@@ -76,7 +76,7 @@ jobs:
           NEW_REVISION: ${{env.new_revision}}
           PREVIOUS_REVISION: ${{env.previous_revision}}
           JOB_QUEUE_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-queue/aws-batch-4
-          RULE_ARN: arn:aws:events:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:rule/put_dynamo_db
+          ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
         shell: bash
         run: |
           RULE_NAME=put_dynamo_db
@@ -95,7 +95,7 @@ jobs:
             {
               \"Id\": \"$TARGET_ID\",
               \"Arn\": \"$JOB_QUEUE_ARN\",
-              \"RoleArn\": \"$RULE_ARN\",
+              \"RoleArn\": \"$ROLE_ARN\",
               \"BatchParameters\": {
                 \"JobDefinition\": \"$NEW_JOB_DEFINITION\",
                 \"JobName\": \"$JOB_NAME\"
