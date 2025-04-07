@@ -95,7 +95,7 @@ jobs:
             {
               \"Id\": \"$TARGET_ID\",
               \"Arn\": \"$JOB_QUEUE_ARN\",
-              \"RoleArn\": \"$ROLE_ARN\",
+              \"RoleArn\": \"$RULE_ARN\",
               \"BatchParameters\": {
                 \"JobDefinition\": \"$NEW_JOB_DEFINITION\",
                 \"JobName\": \"$JOB_NAME\"
