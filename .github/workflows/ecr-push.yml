@@ -86,8 +86,8 @@ jobs:
           NEW_JOB_DEFINITION=$JOB_DEFINITION_ARN:$NEW_REVISION
           OLD_JOB_DEFINITION=$JOB_DEFINITION_ARN:$CURRENT_REVISION
 
-          # 古いターゲットを削除する
-          aws events remove-targets --rule $RULE_NAME --ids $TARGET_ID
+          # 古いターゲットを削除する(マネージドルールのため、forceオプションを使用)
+          aws events remove-targets --rule $RULE_NAME --ids $TARGET_ID --force
 
           # CloudWatch Eventsのターゲットを更新する
           aws events put-targets --rule $RULE_NAME \
