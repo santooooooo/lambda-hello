@@ -1,14 +1,11 @@
 name: push ecr image and register new aws batch definition
 
 on:
-  push:
-  # pull_request:
-  # # # PRが閉じたタイミングで実行
-  #   types:
-  #     - closed
-  #   # mainブランチのみを対象とする
-  #   branches:
-  #     - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 env:
   JOB_DIFINITION_NAME: "aws-batch-4"
@@ -16,7 +13,7 @@ env:
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
 
 jobs:
-  ECRPushAndDeployToAwsBatch:
+  AWSBatchUpdate:
     runs-on: ubuntu-latest
     # `permissions` を設定しないと OIDC が使えないので注意
     permissions:
