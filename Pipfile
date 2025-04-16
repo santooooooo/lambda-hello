@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 pytest = "*"
 flake8 = "*"
+requests = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pytest = "*"
