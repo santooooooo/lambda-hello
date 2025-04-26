@@ -45,8 +45,9 @@ jobs:
         shell: bash
         run: |
           docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
-          docker tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ github.sha }}
+          docker tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
           docker tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
 
       - name: Get current JobDefinition
