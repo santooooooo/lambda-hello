@@ -44,7 +44,7 @@ jobs:
           COMMIT_HASH: ${{ github.sha }}
         shell: bash
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
+          docker build -f . -t ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
           docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
 
