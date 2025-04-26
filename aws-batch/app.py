@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from .usecase import get_jquants_temporary_token_service
 from .usecase import get_stock_list_service
 
-print("Hello from Fargate!")
+print("Hello from Fargate!!")
 
 # 環境変数の読み込み
 load_dotenv()
