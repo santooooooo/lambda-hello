@@ -1,11 +1,12 @@
 name: push ecr image and register new aws batch definition
 
 on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
+  push:
+  # pull_request:
+  #   types:
+  #     - closed
+  #   branches:
+  #     - main
 
 env:
   JOB_DIFINITION_NAME: "aws-batch-4"
@@ -40,11 +41,12 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: "aws-batch"
           # 任意のイメージタグ
-          IMAGE_TAG: ${{ github.sha }}
+          COMMIT_HASH: ${{ github.sha }}
         shell: bash
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
 
       - name: Get current JobDefinition
         id: get-current-job-definition
