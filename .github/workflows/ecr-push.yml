@@ -110,7 +110,7 @@ jobs:
         id: delete-previous-job-definition
         env:
           PREVIOUS_REVISION: ${{env.previous_revision}}
-          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
+          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
         shell: bash
         run: |
           PREVIOUS_JOB_DEFINITION=${{env.JOB_DEFINITION_ARN}}:${{env.PREVIOUS_REVISION}}
