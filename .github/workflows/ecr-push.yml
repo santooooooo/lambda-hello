@@ -9,7 +9,7 @@ on:
   #     - main
 
 env:
-  JOB_DIFINITION_NAME: "aws-batch-4"
+  JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
 
@@ -38,17 +38,16 @@ jobs:
         id: push-ecr
         env:
           # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: "aws-batch"
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}/aws-batch
           # 任意のイメージタグ
           COMMIT_HASH: ${{ github.sha }}
         shell: bash
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
-          docker tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
-          docker tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.COMMIT_HASH }}
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:latest
+          docker build . --tag ${{ env.REGISTRY }}:latest
+          docker tag ${{ env.REGISTRY }}:latest ${{ env.REGISTRY }}:${{ env.COMMIT_HASH }}
+          docker tag ${{ env.REGISTRY }}:latest ${{ env.REGISTRY }}:latest
+          docker push ${{ env.REGISTRY }}:${{ env.COMMIT_HASH }}
+          docker push ${{ env.REGISTRY }}:latest
 
       - name: Get current JobDefinition
         id: get-current-job-definition
