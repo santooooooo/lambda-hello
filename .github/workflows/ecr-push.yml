@@ -1,15 +1,13 @@
 name: push ecr image and register new aws batch definition
 
 on:
-  push:
-  # pull_request:
-  #   types:
-  #     - closed
-  #   branches:
-  #     - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 env:
-  # JOB_DIFINITION_NAME: "aws-batch-4"
   JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
@@ -33,7 +31,7 @@ jobs:
 
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
-        id: login-ecr # outputs で参照するために id を設定
+        id: login-ecr
 
       # Docker イメージを build・push する
       - name: build and push docker image to ecr
