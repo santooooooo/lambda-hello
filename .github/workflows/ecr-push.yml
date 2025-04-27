@@ -8,9 +8,10 @@ on:
       - main
 
 env:
-  JOB_DIFINITION_NAME: "aws-batch-4"
+  JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
+  CLOUD_WATCH_EVENT_RULE_NAME: "JquantsBatchScheduleRule"
 
 jobs:
   AWSBatchUpdate:
@@ -30,21 +31,23 @@ jobs:
 
       # ECR ログイン
       - uses: aws-actions/amazon-ecr-login@v1
-        id: login-ecr # outputs で参照するために id を設定
+        id: login-ecr
 
       # Docker イメージを build・push する
       - name: build and push docker image to ecr
         id: push-ecr
         env:
           # ECR レジストリを `aws-actions/amazon-ecr-login` アクションの `outputs.registry` から取得
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPOSITORY: "aws-batch"
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}/aws-batch
           # 任意のイメージタグ
-          IMAGE_TAG: ${{ github.sha }}
+          COMMIT_HASH: ${{ github.sha }}
         shell: bash
         run: |
-          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker build . --tag ${{ env.REGISTRY }}:latest
+          docker tag ${{ env.REGISTRY }}:latest ${{ env.REGISTRY }}:${{ env.COMMIT_HASH }}
+          docker tag ${{ env.REGISTRY }}:latest ${{ env.REGISTRY }}:latest
+          docker push ${{ env.REGISTRY }}:${{ env.COMMIT_HASH }}
+          docker push ${{ env.REGISTRY }}:latest
 
       - name: Get current JobDefinition
         id: get-current-job-definition
@@ -55,9 +58,9 @@ jobs:
           fi
 
           PREVIOUS_REVISION=$(aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE --query "jobDefinitions[0].revision")
-          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType)' > ${{env.JOB_TASK_DEFINITION_JSON}}
+          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType, .tags)' > ${{env.JOB_TASK_DEFINITION_JSON}}
           PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
-          cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "${{ github.sha }}" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
+          cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "latest" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
           echo "previous_revision=$PREVIOUS_REVISION" >> $GITHUB_ENV
 
       - name: Register new JobDefinition
@@ -76,7 +79,7 @@ jobs:
           ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
         shell: bash
         run: |
-          RULE_NAME=put_dynamo_db
+          RULE_NAME=${{env.CLOUD_WATCH_EVENT_RULE_NAME}}
           TARGET_ID=Id25774506-614e-4bbc-906d-078b66a0a951
           JOB_NAME=AWSBatch4
           JOB_DEFINITION_ARN=arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
@@ -105,7 +108,7 @@ jobs:
         id: delete-previous-job-definition
         env:
           PREVIOUS_REVISION: ${{env.previous_revision}}
-          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
+          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
         shell: bash
         run: |
           PREVIOUS_JOB_DEFINITION=${{env.JOB_DEFINITION_ARN}}:${{env.PREVIOUS_REVISION}}
