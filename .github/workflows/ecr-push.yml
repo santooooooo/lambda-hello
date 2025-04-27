@@ -9,6 +9,7 @@ on:
   #     - main
 
 env:
+  # JOB_DIFINITION_NAME: "aws-batch-4"
   JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
@@ -58,7 +59,7 @@ jobs:
           fi
 
           PREVIOUS_REVISION=$(aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE --query "jobDefinitions[0].revision")
-          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType)' > ${{env.JOB_TASK_DEFINITION_JSON}}
+          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType, .tags)' > ${{env.JOB_TASK_DEFINITION_JSON}}
           PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
           cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "latest" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
           echo "previous_revision=$PREVIOUS_REVISION" >> $GITHUB_ENV
