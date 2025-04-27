@@ -13,6 +13,7 @@ env:
   JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
+  CLOUD_WATCH_EVENT_RULE_NAME: "JquantsBatchScheduleRule"
 
 jobs:
   AWSBatchUpdate:
@@ -80,7 +81,7 @@ jobs:
           ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
         shell: bash
         run: |
-          RULE_NAME=put_dynamo_db
+          RULE_NAME=${{env.CLOUD_WATCH_EVENT_RULE_NAME}}
           TARGET_ID=Id25774506-614e-4bbc-906d-078b66a0a951
           JOB_NAME=AWSBatch4
           JOB_DEFINITION_ARN=arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/aws-batch-4
