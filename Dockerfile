@@ -18,8 +18,8 @@ RUN if [ -f Pipfile.lock ]; then \
     pipenv install --dev; \
     fi
 
-# 環境変数の設定 (必要に応じて)
-# ENV FLASK_APP=app.py
+# 環境変数の設定
+ENV IS_TEST="False"
 
 COPY ./aws-batch/ .
 
