@@ -10,6 +10,7 @@ on:
 
 env:
   JOB_DIFINITION_NAME: "JquantsBatchDefinition20-570kIIIfJx7eChsT"
+  JOB_QUEUE_NAME: "JquantsBatchJobQueueA33E-8fIVsO7gGHtRPY8g"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
   CLOUD_WATCH_EVENT_RULE_NAME: "JquantsBatchScheduleRule"
@@ -76,7 +77,7 @@ jobs:
         env:
           NEW_REVISION: ${{env.new_revision}}
           PREVIOUS_REVISION: ${{env.previous_revision}}
-          JOB_QUEUE_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-queue/${{env.JOB_DIFINITION_NAME}}
+          JOB_QUEUE_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-queue/${{env.JOB_QUEUE_NAME}}
           ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
         shell: bash
         run: |
