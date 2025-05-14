@@ -82,6 +82,7 @@ jobs:
         shell: bash
         run: |
           RULE_NAME=${{env.CLOUD_WATCH_EVENT_RULE_NAME}}
+          JOB_NAME=${{env.JOB_DIFINITION_NAME}}
           TARGET_ID=Id25774506-614e-4bbc-906d-078b66a0a951
           JOB_DEFINITION_ARN=arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
           NEW_JOB_DEFINITION=$JOB_DEFINITION_ARN:$NEW_REVISION
@@ -99,7 +100,7 @@ jobs:
               \"RoleArn\": \"$ROLE_ARN\",
               \"BatchParameters\": {
                 \"JobDefinition\": \"$NEW_JOB_DEFINITION\",
-                \"JobName\": \"${{env.JOB_DIFINITION_NAME}}\"
+                \"JobName\": \"$JOB_NAME\"
               }
             }
           ]"
