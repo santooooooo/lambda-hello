@@ -9,7 +9,7 @@ on:
   #     - main
 
 env:
-  JOB_DIFINITION_NAME: "JquantsBatchDefinition20-HwA3KAPi1Yzx5SeU"
+  JOB_DIFINITION_NAME: "JquantsBatchDefinition20-570kIIIfJx7eChsT"
   JOB_TASK_DEFINITION_JSON: "job-task-def.json"
   NEW_JOB_TASK_DEFINITION_JSON: "new-job-task-def.json"
   CLOUD_WATCH_EVENT_RULE_NAME: "JquantsBatchScheduleRule"
