@@ -24,6 +24,6 @@ stockList = getStockListService.get(idToken)
 print(stockList)
 
 # 上場銘柄一覧を保存
-print("上場銘柄一覧を保存します")
+print("上場銘柄一覧を保存します!!!!")
 insertStockInfoListService = insert_stock_info_list_service.InsertStockInfoListService(isTest=isTest)
 insertStockInfoListService.insert(stockList)
