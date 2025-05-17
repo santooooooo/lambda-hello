@@ -51,68 +51,68 @@ jobs:
           docker push ${{ env.REGISTRY }}:${{ env.COMMIT_HASH }}
           docker push ${{ env.REGISTRY }}:latest
 
-      - name: Get current JobDefinition
-        id: get-current-job-definition
-        shell: bash
-        run: |
-          if [[ ! $(which aws) > /dev/null ]]; then
-            apt-get update && apt-get install -y awscli
-          fi
+      # - name: Get current JobDefinition
+      #   id: get-current-job-definition
+      #   shell: bash
+      #   run: |
+      #     if [[ ! $(which aws) > /dev/null ]]; then
+      #       apt-get update && apt-get install -y awscli
+      #     fi
 
-          PREVIOUS_REVISION=$(aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE --query "jobDefinitions[0].revision")
-          aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType, .tags)' > ${{env.JOB_TASK_DEFINITION_JSON}}
-          PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
-          cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "latest" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
-          echo "previous_revision=$PREVIOUS_REVISION" >> $GITHUB_ENV
+      #     PREVIOUS_REVISION=$(aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE --query "jobDefinitions[0].revision")
+      #     aws batch describe-job-definitions --job-definition-name ${{env.JOB_DIFINITION_NAME}} --status ACTIVE | jq '.jobDefinitions[0] | del (.jobDefinitionArn, .revision, .status, .requiresAttributes, .containerOrchestrationType, .tags)' > ${{env.JOB_TASK_DEFINITION_JSON}}
+      #     PREVIOUS_IMAGE_TAG=$(cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq -r '.containerProperties.image | split(":")[1]')
+      #     cat ${{env.JOB_TASK_DEFINITION_JSON}} | jq --arg PREVIOUS_IMAGE_TAG "$PREVIOUS_IMAGE_TAG" --arg IMAGE_TAG "latest" '.containerProperties.image |= sub($PREVIOUS_IMAGE_TAG; $IMAGE_TAG)' > ${{env.NEW_JOB_TASK_DEFINITION_JSON}}
+      #     echo "previous_revision=$PREVIOUS_REVISION" >> $GITHUB_ENV
 
-      - name: Register new JobDefinition
-        id: register-new-job-definition
-        shell: bash
-        run: |
-          NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON --query "revision")
-          echo "new_revision=$NEW_REVISION" >> $GITHUB_ENV
+      # - name: Register new JobDefinition
+      #   id: register-new-job-definition
+      #   shell: bash
+      #   run: |
+      #     NEW_REVISION=$(aws batch register-job-definition --cli-input-json file://$NEW_JOB_TASK_DEFINITION_JSON --query "revision")
+      #     echo "new_revision=$NEW_REVISION" >> $GITHUB_ENV
 
-      - name: Update Event Bridge target
-        id: update-cloud-watch-event
-        env:
-          NEW_REVISION: ${{env.new_revision}}
-          PREVIOUS_REVISION: ${{env.previous_revision}}
-          JOB_QUEUE_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-queue/${{env.JOB_QUEUE_NAME}}
-          ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
-        shell: bash
-        run: |
-          RULE_NAME=${{env.CLOUD_WATCH_EVENT_RULE_NAME}}
-          JOB_NAME=${{env.JOB_DIFINITION_NAME}}
-          TARGET_ID=Id25774506-614e-4bbc-906d-078b66a0a951
-          JOB_DEFINITION_ARN=arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
-          NEW_JOB_DEFINITION=$JOB_DEFINITION_ARN:$NEW_REVISION
-          OLD_JOB_DEFINITION=$JOB_DEFINITION_ARN:$CURRENT_REVISION
+      # - name: Update Event Bridge target
+      #   id: update-cloud-watch-event
+      #   env:
+      #     NEW_REVISION: ${{env.new_revision}}
+      #     PREVIOUS_REVISION: ${{env.previous_revision}}
+      #     JOB_QUEUE_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-queue/${{env.JOB_QUEUE_NAME}}
+      #     ROLE_ARN: arn:aws:iam::${{secrets.AWS_ACCOUNT_ID}}:role/service-role/Amazon_EventBridge_Invoke_Batch_Job_Queue_698077064
+      #   shell: bash
+      #   run: |
+      #     RULE_NAME=${{env.CLOUD_WATCH_EVENT_RULE_NAME}}
+      #     JOB_NAME=${{env.JOB_DIFINITION_NAME}}
+      #     TARGET_ID=Id25774506-614e-4bbc-906d-078b66a0a951
+      #     JOB_DEFINITION_ARN=arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
+      #     NEW_JOB_DEFINITION=$JOB_DEFINITION_ARN:$NEW_REVISION
+      #     OLD_JOB_DEFINITION=$JOB_DEFINITION_ARN:$CURRENT_REVISION
 
-          # 古いターゲットを削除する(マネージドルールのため、forceオプションを使用)
-          aws events remove-targets --rule $RULE_NAME --ids $TARGET_ID --force
+      #     # 古いターゲットを削除する(マネージドルールのため、forceオプションを使用)
+      #     aws events remove-targets --rule $RULE_NAME --ids $TARGET_ID --force
 
-          # CloudWatch Eventsのターゲットを更新する
-          aws events put-targets --rule $RULE_NAME \
-          --targets "[
-            {
-              \"Id\": \"$TARGET_ID\",
-              \"Arn\": \"$JOB_QUEUE_ARN\",
-              \"RoleArn\": \"$ROLE_ARN\",
-              \"BatchParameters\": {
-                \"JobDefinition\": \"$NEW_JOB_DEFINITION\",
-                \"JobName\": \"$JOB_NAME\"
-              }
-            }
-          ]"
+      #     # CloudWatch Eventsのターゲットを更新する
+      #     aws events put-targets --rule $RULE_NAME \
+      #     --targets "[
+      #       {
+      #         \"Id\": \"$TARGET_ID\",
+      #         \"Arn\": \"$JOB_QUEUE_ARN\",
+      #         \"RoleArn\": \"$ROLE_ARN\",
+      #         \"BatchParameters\": {
+      #           \"JobDefinition\": \"$NEW_JOB_DEFINITION\",
+      #           \"JobName\": \"$JOB_NAME\"
+      #         }
+      #       }
+      #     ]"
 
 
-      - name: Delete previous JobDefinition
-        id: delete-previous-job-definition
-        env:
-          PREVIOUS_REVISION: ${{env.previous_revision}}
-          JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
-        shell: bash
-        run: |
-          PREVIOUS_JOB_DEFINITION=${{env.JOB_DEFINITION_ARN}}:${{env.PREVIOUS_REVISION}}
-          aws batch deregister-job-definition --job-definition $PREVIOUS_JOB_DEFINITION
+      # - name: Delete previous JobDefinition
+      #   id: delete-previous-job-definition
+      #   env:
+      #     PREVIOUS_REVISION: ${{env.previous_revision}}
+      #     JOB_DEFINITION_ARN: arn:aws:batch:us-west-1:${{secrets.AWS_ACCOUNT_ID}}:job-definition/${{env.JOB_DIFINITION_NAME}}
+      #   shell: bash
+      #   run: |
+      #     PREVIOUS_JOB_DEFINITION=${{env.JOB_DEFINITION_ARN}}:${{env.PREVIOUS_REVISION}}
+      #     aws batch deregister-job-definition --job-definition $PREVIOUS_JOB_DEFINITION
 
