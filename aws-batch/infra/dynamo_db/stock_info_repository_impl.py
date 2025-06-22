@@ -63,7 +63,6 @@ class StockInfoRepositoryImpl(StockInfoRepository):
         try:
             response = self.dynamo_db.describe_table(TableName=self.table_name)
             print(f"{self.table_name} は存在するため、新規テーブルの作成は実行されません。")
-            print(f"Table status: {response['Table']['TableStatus']}")
             return Right(None)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
@@ -72,7 +71,7 @@ class StockInfoRepositoryImpl(StockInfoRepository):
             else:
                 raise Exception(f"Unexpected error: {e}")
 
-    def get_stock_info_list(self, code: List[str] = None) -> List[Stock]:
+    def get_stock_info_list(self) -> List[Stock]:
         """株式情報をDynamoDBから取得する
 
         Args:
@@ -81,69 +80,27 @@ class StockInfoRepositoryImpl(StockInfoRepository):
         Returns:
             List[Stock]: 取得した株式情報のリスト
         """
-        if code:
-            # 特定のコードの株式情報を取得
-            stock_list = []
-            for stock_code in code:
-                response = self.dynamo_db.get_item(
-                    TableName=self.table_name,
-                    Key={'code': {'S': stock_code}}
-                )
-                item = response.get('Item')
-                if item:
-                    stock = Stock(
-                        code=item['code']['S'],
-                        companyName=item['companyName']['S'],
-                        companyNameEnglish=item['companyNameEnglish']['S'],
-                        date=item['date']['S'],
-                        marketCode=item['marketCode']['S'],
-                        sector17Code=item['sector17Code']['S'],
-                        sector33Code=item['sector33Code']['S'],
-                        scaleCategory=item['scaleCategory']['S']
-                    )
-                    stock_list.append(stock)
-            return stock_list
-        else:
-            # 全株式情報を取得
-            response = self.dynamo_db.scan(TableName=self.table_name)
-            items = response.get('Items', [])
 
-            # DynamoDBのアイテムをStockオブジェクトに変換
-            stock_list = []
-            for item in items:
-                stock = Stock(
-                    code=item['code']['S'],
-                    companyName=item['companyName']['S'],
-                    companyNameEnglish=item['companyNameEnglish']['S'],
-                    date=item['date']['S'],
-                    marketCode=item['marketCode']['S'],
-                    sector17Code=item['sector17Code']['S'],
-                    sector33Code=item['sector33Code']['S'],
-                    scaleCategory=item['scaleCategory']['S']
-                )
-                stock_list.append(stock)
+        # 全株式情報を取得
+        response = self.dynamo_db.scan(TableName=self.table_name)
+        items = response.get('Items', [])
 
-            return stock_list
+        # DynamoDBのアイテムをStockオブジェクトに変換
+        stock_list = []
+        for item in items:
+            stock = Stock(
+                code=item['code']['S'],
+                companyName=item['companyName']['S'],
+                companyNameEnglish=item['companyNameEnglish']['S'],
+                date=item['date']['S'],
+                marketCode=item['marketCode']['S'],
+                sector17Code=item['sector17Code']['S'],
+                sector33Code=item['sector33Code']['S'],
+                scaleCategory=item['scaleCategory']['S']
+            )
+            stock_list.append(stock)
 
-    def get_stock_codes(self, stock_list: List[Stock]) -> List[str]:
-        """Stockオブジェクトのリストからcodeのリストを抽出する
-
-        Args:
-            stock_list (List[Stock]): 株式情報のリスト
-
-        Returns:
-            List[str]: 株式コードのリスト
-        """
-        # リスト内包表記を使用（推奨）
-        return [stock.code for stock in stock_list]
-
-        # 他の方法：
-        # return list(map(lambda stock: stock.code, stock_list))
-        #
-        # code_list = []
-        # for stock in stock_list:
-        #     code_list.append(stock.code)
-        # return code_list
+        return stock_list
 
     def insert_stock_info(self, stock_list: List[Stock]) -> None:
         """株式情報をDynamoDBに保存する
