@@ -4,12 +4,29 @@ from ..infra.dynamo_db.stock_info_repository_impl import StockInfoRepositoryImpl
 from typing import List
 from ..domain.model.stock import Stock
 
+
 class InsertStockInfoListService:
-    stockInfoRepository: StockInfoRepository  = None
+    """上場銘柄一覧をDynamoDBに保存するサービス"""
+    stockInfoRepository: StockInfoRepository
+    isTest: str
 
     def __init__(self, isTest: str) -> None:
         self.stockInfoRepository = StockInfoRepositoryImpl(isTest=isTest)
+        self.isTest = isTest
 
     def insert(self, stock_list: List[Stock]) -> None:
+        """上場銘柄一覧をDynamoDBに保存する
+        Args:
+            stock_list (List[Stock]): 保存する上場銘柄一覧
+        """
+        # テーブルが存在しない場合は作成する
         self.stockInfoRepository.create_table_if_not_exists()
-        # self.stockInfoRepository.insert_stock_info(stock_list)
+
+        # 既に保存されている銘柄コードの取得
+        exists_stock_list = self.stockInfoRepository.get_stock_info_list()
+        exists_stock_list_code = [stock.code for stock in exists_stock_list]
+
+        # まだ保存されていないstock_listのみ保存する
+        new_stock_list = [
+            stock for stock in stock_list if stock.code not in exists_stock_list_code]
+        self.stockInfoRepository.insert_stock_info(new_stock_list)

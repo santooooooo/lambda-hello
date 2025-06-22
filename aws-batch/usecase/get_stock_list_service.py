@@ -4,7 +4,7 @@ from ..infra.jquants.jquants_repository_impl import JquantsRepositoryImpl
 from ..domain.model.stock import Stock
 
 class GetStockListService:
-    jquantsRepository: JquantsRepository = None
+    jquantsRepository: JquantsRepository
 
     def __init__(self):
         self.jquantsRepository = JquantsRepositoryImpl()

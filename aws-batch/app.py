@@ -8,11 +8,16 @@ print("Hello from Fargate!!")
 load_dotenv()
 email = os.environ.get("JQUANTS_EMAIL")
 password = os.environ.get("JQUANTS_PASSWORD")
-isTest= os.environ.get("IS_TEST")
+isTest = os.environ.get("IS_TEST")
+
+if email is None or password is None or isTest is None:
+    print("JQUANTS_EMAIL または JQUANTS_PASSWORD が設定されていません")
+    exit(1)
 
 # jquantsのAPIにPOSTリクエストを送信し、認証用トークンを取得
 getJquantsTemporaryTokenService = get_jquants_temporary_token_service.GetJquantsTemporaryTokenService()
 token = getJquantsTemporaryTokenService.get_token(email, password)
+print("トークンはこちら")
 print(token)
 
 idToken = getJquantsTemporaryTokenService.get_id_token(token)
