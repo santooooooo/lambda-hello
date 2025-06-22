@@ -8,9 +8,9 @@ print("Hello from Fargate!!")
 load_dotenv()
 email = os.environ.get("JQUANTS_EMAIL")
 password = os.environ.get("JQUANTS_PASSWORD")
-isTest = os.environ.get("IS_TEST")
+is_test = os.environ.get("IS_TEST")
 
-if email is None or password is None or isTest is None:
+if email is None or password is None or is_test is None:
     print("JQUANTS_EMAIL, JQUANTS_PASSWORD, または IS_TEST が設定されていません")
     exit(1)
 
@@ -27,5 +27,5 @@ stockList = getStockListService.get(idToken)
 # 上場銘柄一覧を保存
 print("上場銘柄一覧を保存します")
 insertStockInfoListService = insert_stock_info_list_service.InsertStockInfoListService(
-    isTest=isTest)
+    isTest=is_test)
 insertStockInfoListService.insert(stockList)
