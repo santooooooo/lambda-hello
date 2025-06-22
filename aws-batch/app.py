@@ -11,7 +11,7 @@ password = os.environ.get("JQUANTS_PASSWORD")
 isTest = os.environ.get("IS_TEST")
 
 if email is None or password is None or isTest is None:
-    print("JQUANTS_EMAIL または JQUANTS_PASSWORD が設定されていません")
+    print("JQUANTS_EMAIL, JQUANTS_PASSWORD, または IS_TEST が設定されていません")
     exit(1)
 
 # jquantsのAPIにPOSTリクエストを送信し、認証用トークンを取得
