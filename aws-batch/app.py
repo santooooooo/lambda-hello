@@ -11,7 +11,7 @@ password = os.environ.get("JQUANTS_PASSWORD")
 isTest = os.environ.get("IS_TEST")
 
 if email is None or password is None or isTest is None:
-    print("JQUANTS_EMAIL または JQUANTS_PASSWORD が設定されていません")
+    print("JQUANTS_EMAIL, JQUANTS_PASSWORD, または IS_TEST が設定されていません")
     exit(1)
 
 # jquantsのAPIにPOSTリクエストを送信し、認証用トークンを取得
@@ -29,6 +29,6 @@ stockList = getStockListService.get(idToken)
 print(stockList)
 
 # 上場銘柄一覧を保存
-print("上場銘柄一覧を保存します")
+print("上場銘柄一覧を保存します!!!!")
 insertStockInfoListService = insert_stock_info_list_service.InsertStockInfoListService(isTest=isTest)
 insertStockInfoListService.insert(stockList)
