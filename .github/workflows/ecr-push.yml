@@ -18,13 +18,13 @@ jobs:
       - uses: actions/checkout@v3
 
       # AWS 認証
-      - uses: aws-actions/configure-aws-credentials@v1
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: "us-west-1"
-          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/lambda-hello-github-actions-ecr-role"
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ECR_ROLE }}"
 
       # ECR ログイン
-      - uses: aws-actions/amazon-ecr-login@v1
+      - uses: aws-actions/amazon-ecr-login@v2
         id: login-ecr
 
       # Docker イメージを build・push する
