@@ -23,11 +23,20 @@ class InsertStockInfoListService:
         self.stockInfoRepository.create_table_if_not_exists()
 
         # 既に保存されている銘柄コードの取得
-        exists_stock_list = self.stockInfoRepository.get_stock_info_list()
-        exists_stock_list_code = [stock.code for stock in exists_stock_list]
-        print("現在保存されている銘柄コード件数: ", len(exists_stock_list_code))
+        try:
+            exists_stock_list = self.stockInfoRepository.get_stock_info_list()
+            exists_stock_list_code = [
+                stock.code for stock in exists_stock_list]
+            print("現在保存されている銘柄コード件数: ", len(exists_stock_list_code))
+        except Exception as e:
+            print("現在保存されている銘柄コードの取得に失敗しました: ", e)
+            return
 
         # まだ保存されていないstock_listのみ保存する
-        new_stock_list = [
-            stock for stock in stock_list if stock.code not in exists_stock_list_code]
-        self.stockInfoRepository.insert_stock_info(new_stock_list)
+        try:
+            new_stock_list = [
+                stock for stock in stock_list if stock.code not in exists_stock_list_code]
+            self.stockInfoRepository.insert_stock_info(new_stock_list)
+        except Exception as e:
+            print("新しい銘柄の保存に失敗しました: ", e)
+            return
