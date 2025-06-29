@@ -25,6 +25,7 @@ class InsertStockInfoListService:
         # 既に保存されている銘柄コードの取得
         exists_stock_list = self.stockInfoRepository.get_stock_info_list()
         exists_stock_list_code = [stock.code for stock in exists_stock_list]
+        print("現在保存されている銘柄コード件数: ", len(exists_stock_list_code))
 
         # まだ保存されていないstock_listのみ保存する
         new_stock_list = [
