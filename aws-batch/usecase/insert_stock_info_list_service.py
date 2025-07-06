@@ -30,6 +30,7 @@ class InsertStockInfoListService:
             print("現在保存されている銘柄コード件数: ", len(exists_stock_list_code))
         except Exception as e:
             print("現在保存されている銘柄コードの取得に失敗しました: ", e)
+            raise e
             return
 
         # まだ保存されていないstock_listのみ保存する
@@ -39,4 +40,5 @@ class InsertStockInfoListService:
             self.stockInfoRepository.insert_stock_info(new_stock_list)
         except Exception as e:
             print("新しい銘柄の保存に失敗しました: ", e)
+            raise e
             return
