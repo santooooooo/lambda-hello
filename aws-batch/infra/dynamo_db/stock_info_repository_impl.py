@@ -1,4 +1,3 @@
-from xmlrpc.client import Boolean
 from ...domain.repository.dynamo_db.stock_info_repository import StockInfoRepository
 from typing import List
 from ...domain.model.stock import Stock
