@@ -5,6 +5,18 @@ from dataclasses import dataclass
 
 @dataclass
 class Stock:
+    """銘柄情報"""
+    """
+    Args:
+        date (str): 日付
+        code (str): 銘柄コード
+        companyName (str): 会社名
+        companyNameEnglish (str): 英語会社名
+        sector17Code (str): 17業種コード
+        sector33Code (str): 33業種コード
+        scaleCategory (str): 規模コード
+        marketCode (str): 市場コード
+    """
     date: str
     code: str
     companyName: str
