@@ -34,8 +34,7 @@ class GetDailyQuantsService:
             Date: 対象日付
             None: 対象日付が見つからない場合
         """
-        # 日付を8/1に設定
-        today = datetime(2025, 8, 1)
+        today = datetime.now()
         targetDate = today - timedelta(weeks=12)
         if targetDate.weekday() <= 4:
             return targetDate
