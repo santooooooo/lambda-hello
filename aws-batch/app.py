@@ -2,8 +2,6 @@ import os
 from dotenv import load_dotenv
 from .usecase import get_jquants_temporary_token_service, get_stock_list_service, insert_stock_info_list_service, get_daily_quants_service, insert_daily_quants_list_service
 
-print("Hello from Fargate!!")
-
 # 環境変数の読み込み
 load_dotenv()
 email = os.environ.get("JQUANTS_EMAIL")
@@ -33,7 +31,6 @@ insertStockInfoListService.insert(stockList)
 # 株式四本値を取得
 getDailyQuantsService = get_daily_quants_service.GetDailyQuantsService()
 dailyQuantsList = getDailyQuantsService.get(idToken)
-print(dailyQuantsList)
 
 print("株式四本値を保存します")
 insertDailyQuantsListService = insert_daily_quants_list_service.InsertDailyQuantsListService(
