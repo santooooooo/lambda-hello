@@ -17,6 +17,7 @@ class GetDailyQuantsService:
         if targetDate == None:
             return None
 
+        print(targetDate)
         return self.jquantsRepository.get_daily_quants(idToken, targetDate)
 
     def get_target_date(self) -> datetime | None:

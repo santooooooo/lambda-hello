@@ -22,36 +22,16 @@ class JquantsRepositoryImpl(JquantsRepository):
             self.api+"token/auth_user", data=json.dumps(data))
         if response.status_code == 200:
             return response.json().get("refreshToken")
-        elif response.status_code == 403 or response.status_code == 401:
-            raise UnauthorizedException(
-                f"認証エラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 400:
-            raise Exception(
-                f"クライアント側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 500:
-            raise Exception(
-                f"サーバ側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
         else:
-            raise Exception(
-                f"不明なエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
+            self.error_handler(response)
 
     def get_id_token(self, refreshToken: str) -> str:
         response = requests.post(
             self.api + f"token/auth_refresh?refreshtoken={refreshToken}")
         if response.status_code == 200:
             return response.json().get("idToken")
-        elif response.status_code == 403 or response.status_code == 401:
-            raise UnauthorizedException(
-                f"認証エラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 400:
-            raise Exception(
-                f"クライアント側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 500:
-            raise Exception(
-                f"サーバ側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
         else:
-            raise Exception(
-                f"不明なエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
+            self.error_handler(response)
 
     def get_stock_list(self, idToken: str) -> List[Stock]:
         headers = {'Authorization': 'Bearer {}'.format(idToken)}
@@ -70,18 +50,8 @@ class JquantsRepositoryImpl(JquantsRepository):
                     marketCode=stock["MarketCode"]
                 ) for stock in jsonStockList]
             return stockList
-        elif response.status_code == 403 or response.status_code == 401:
-            raise UnauthorizedException(
-                f"認証エラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 400:
-            raise Exception(
-                f"クライアント側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
-        elif response.status_code >= 500:
-            raise Exception(
-                f"サーバ側のエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
         else:
-            raise Exception(
-                f"不明なエラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
+            self.error_handler(response)
 
     def get_daily_quants(self, idToken: str, date: datetime) -> List[DailyQuants]:
         headers = {'Authorization': 'Bearer {}'.format(idToken)}
@@ -102,7 +72,11 @@ class JquantsRepositoryImpl(JquantsRepository):
                     volume=dailyQuants["AdjustmentVolume"]
                 ) for dailyQuants in jsonDailyQuants]
             return dailyQuantsList
-        elif response.status_code == 403 or response.status_code == 401:
+        else:
+            self.error_handler(response)
+
+    def error_handler(self, response: requests.Response) -> None:
+        if response.status_code == 403 or response.status_code == 401:
             raise UnauthorizedException(
                 f"認証エラーです。エラー内容は以下の通りです\nステータスコード {response.status_code} \n エラー内容 {response.json().get('message')}")
         elif response.status_code >= 400:
