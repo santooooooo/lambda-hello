@@ -1,0 +1,41 @@
+---
+description: ドメインモデルの定義ルール
+globs: ["aws-batch/domain/model/**/*.py"]
+alwaysApply: false
+---
+
+# ドメインモデルルール
+
+## モデル定義
+- `@dataclass` デコレータを使用してドメインモデルを定義すること
+- すべてのフィールドに型ヒントを記述すること
+- docstringでクラスの説明と各フィールドの説明を記述すること
+
+## モデルの構造
+```python
+from dataclasses import dataclass
+
+@dataclass
+class ModelName:
+    """モデルの説明
+
+    Args:
+        field1 (type): フィールド1の説明
+        field2 (type): フィールド2の説明
+    """
+    field1: type
+    field2: type
+
+    def __init__(self, field1: type, field2: type):
+        self.field1 = field1
+        self.field2 = field2
+```
+
+## 日付フィールド
+- 日付は文字列（`str`）として保持する
+- 形式は `'YYYY-MM-DD'` または `'YYYYMMDD'` を使用
+- `datetime` オブジェクトが必要な場合は、使用する側で変換すること
+
+## 数値フィールド
+- 価格や数量は `float` 型を使用
+- `None` 値の可能性がある場合は適切に処理すること

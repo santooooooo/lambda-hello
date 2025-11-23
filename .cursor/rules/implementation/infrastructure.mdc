@@ -1,0 +1,32 @@
+---
+description: インフラストラクチャ層の実装ルール
+globs: ["aws-batch/infra/**/*.py"]
+alwaysApply: false
+---
+
+# インフラストラクチャ層のルール
+
+## DynamoDB実装
+- テーブル名はクラス変数として定義すること
+- ローカル環境と本番環境の切り替えは `isTest` パラメータで制御
+- ローカル環境では `endpoint_url='http://host.docker.internal:8000/'` を使用
+
+## テーブル作成
+- `create_table_if_not_exists()` メソッドを実装すること
+- `table_exists()` メソッドでテーブルの存在確認を行う
+- `Either` 型を使用してエラーハンドリングを行う
+
+## データ変換
+- DynamoDBの数値型は文字列として保存（`'N': str(value)`）
+- `None` 値は `'0.0'` に変換するなどの適切な処理を行う
+- 日付は `'YYYYMMDD'` 形式の文字列として保存
+
+## エラーハンドリング
+- `ClientError` をキャッチして適切に処理すること
+- `ResourceNotFoundException` はテーブルが存在しない場合の正常な状態として扱う
+- その他のエラーは例外として再スローする
+
+## 外部API実装
+- APIクライアントは `infra/` に配置
+- 認証トークンの管理を適切に行う
+- エラーレスポンスの処理を実装すること

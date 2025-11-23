@@ -1,0 +1,79 @@
+---
+description: 業務知識とドメイン知識のドキュメント
+alwaysApply: true
+---
+
+# 業務知識とドメイン知識
+
+## プロジェクト概要
+このプロジェクトは、J-Quants APIを使用して株式市場データを取得し、DynamoDBに保存するAWS Batchアプリケーションです。
+
+## ドメイン知識
+
+### 株式情報（Stock）
+- **定義**: 上場銘柄の基本情報
+- **主要フィールド**:
+  - `code`: 銘柄コード（例: "7203"）
+  - `companyName`: 会社名（日本語）
+  - `companyNameEnglish`: 会社名（英語）
+  - `sector17Code`: 17業種コード
+  - `sector33Code`: 33業種コード
+  - `scaleCategory`: 規模コード
+  - `marketCode`: 市場コード
+- **データソース**: J-Quants API `/listed/info`
+
+### 日次株価四本値（DailyQuants）
+- **定義**: 1日の株式取引における4つの価格（始値、高値、安値、終値）と出来高
+- **主要フィールド**:
+  - `date`: 日付（形式: `YYYY-MM-DD`）
+  - `code`: 銘柄コード
+  - `open`: 始値
+  - `high`: 高値
+  - `low`: 安値
+  - `close`: 終値
+  - `volume`: 出来高（売買高）
+- **データソース**: J-Quants API `/prices/daily_quotes`
+- **保存先**: DynamoDBテーブル `DailyQuants`（パーティションキー: `date`, ソートキー: `code`）
+
+## ビジネスルール
+
+### 対象日付の計算ルール
+- **ルール**: 株式四本値を取得する対象日付は以下の条件を満たす必要がある
+  1. 月曜日から金曜日（平日）であること
+  2. 現在日時から12週間前の日付であること
+- **実装場所**: `GetDailyQuantsService.get_target_date()`
+- **注意**: 12週間前の日付が土日の場合、`None` を返す（この場合、データ取得は実行されない）
+
+### データ保存ルール
+- **重複チェック**: 同じ日付のデータが既に存在する場合、新規保存は行わない
+- **実装場所**: `DailyQuantsRepositoryImpl.check_if_today_date_exists()`
+- **テーブル作成**: テーブルが存在しない場合、自動的に作成される
+
+## 外部システム連携
+
+### J-Quants API
+- **認証方式**: メールアドレスとパスワードでリフレッシュトークンを取得し、IDトークンに変換
+- **認証フロー**:
+  1. `/token/auth_user` でリフレッシュトークンを取得
+  2. `/token/auth_refresh` でIDトークンを取得
+- **APIエンドポイント**:
+  - `/listed/info`: 上場銘柄一覧を取得
+  - `/prices/daily_quotes?date=YYYYMMDD`: 指定日の株式四本値を取得
+
+### DynamoDB
+- **ローカル環境**: `http://host.docker.internal:8000/` でLocalStackを使用
+- **本番環境**: AWS DynamoDBを使用
+- **テーブル**:
+  - `StockInfo`: 銘柄情報を保存
+  - `DailyQuants`: 日次株価四本値を保存（パーティションキー: `date`, ソートキー: `code`）
+
+## 処理フロー
+
+### メイン処理フロー（app.py）
+1. 環境変数から認証情報を取得
+2. J-Quants APIからリフレッシュトークンを取得
+3. IDトークンを取得
+4. 上場銘柄一覧を取得
+5. 上場銘柄一覧をDynamoDBに保存
+6. 株式四本値を取得（対象日付は12週間前の平日）
+7. 株式四本値をDynamoDBに保存

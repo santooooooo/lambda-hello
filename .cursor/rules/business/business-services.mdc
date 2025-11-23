@@ -1,0 +1,77 @@
+---
+description: 業務サービス（ユースケース）の仕様ドキュメント
+globs: ["aws-batch/usecase/**/*.py", "aws-batch/app.py"]
+alwaysApply: false
+---
+
+# 業務サービス（ユースケース）仕様
+
+## サービス一覧
+
+### 1. GetJquantsTemporaryTokenService
+- **責務**: J-Quants APIの認証トークンを取得する
+- **メソッド**:
+  - `get_token(email: str, password: str) -> str`: リフレッシュトークンを取得
+  - `get_id_token(refreshToken: str) -> str`: IDトークンを取得
+- **ビジネスルール**: なし（認証処理のみ）
+
+### 2. GetStockListService
+- **責務**: 上場銘柄一覧をJ-Quants APIから取得する
+- **メソッド**:
+  - `get(idToken: str) -> List[Stock] | None`: 上場銘柄一覧を取得
+- **ビジネスルール**: なし（データ取得のみ）
+- **データソース**: J-Quants API `/listed/info`
+
+### 3. InsertStockInfoListService
+- **責務**: 上場銘柄一覧をDynamoDBに保存する
+- **メソッド**:
+  - `insert(stockList: List[Stock] | None) -> None`: 銘柄情報を保存
+- **ビジネスルール**:
+  - データが `None` または空の場合は保存しない
+  - テーブルが存在しない場合は自動的に作成する
+- **依存**: `StockInfoRepository`
+
+### 4. GetDailyQuantsService
+- **責務**: 株式四本値をJ-Quants APIから取得する
+- **メソッド**:
+  - `get(idToken: str) -> List[DailyQuants] | None`: 株式四本値を取得
+  - `get_target_date() -> datetime | None`: 対象日付を計算
+- **ビジネスルール**:
+  - **対象日付の計算**: 現在から12週間前の日付で、かつ平日（月〜金）であること
+  - 12週間前が土日の場合、`None` を返し、データ取得は実行されない
+- **データソース**: J-Quants API `/prices/daily_quotes?date=YYYYMMDD`
+- **依存**: `JquantsRepository`
+
+### 5. InsertDailyQuantsListService
+- **責務**: 株式四本値をDynamoDBに保存する
+- **メソッド**:
+  - `insert(daily_quants: List[DailyQuants] | None) -> None`: 株式四本値を保存
+- **ビジネスルール**:
+  - データが `None` または空の場合は保存しない
+  - 同じ日付のデータが既に存在する場合は保存しない（重複チェック）
+  - テーブルが存在しない場合は自動的に作成する
+- **依存**: `DailyQuantsRepository`
+- **注意**: 日付は文字列形式（`YYYY-MM-DD`）で渡されるが、リポジトリでは `datetime` オブジェクトに変換して使用
+
+## 機能変更時の注意事項
+
+### 対象日付の計算ルールを変更する場合
+- **影響範囲**: `GetDailyQuantsService.get_target_date()`
+- **確認事項**:
+  - 新しい計算ルールがビジネス要件を満たしているか
+  - 平日チェックのロジックが正しいか
+  - エッジケース（祝日、年末年始など）の考慮が必要か
+
+### データ保存ルールを変更する場合
+- **影響範囲**: `InsertDailyQuantsListService`, `InsertStockInfoListService`
+- **確認事項**:
+  - 重複チェックのロジックが正しいか
+  - 既存データとの整合性は保たれるか
+  - パフォーマンスへの影響はないか
+
+### 新しいデータソースを追加する場合
+- **必要な作業**:
+  1. `domain/repository/` にリポジトリインターフェースを定義
+  2. `infra/` にリポジトリ実装を追加
+  3. `usecase/` にサービスクラスを追加
+  4. `app.py` に処理フローを追加

@@ -1,0 +1,56 @@
+---
+description: Pythonコーディング規約とベストプラクティス
+globs: ["**/*.py"]
+alwaysApply: false
+---
+
+# Pythonコーディング規約
+
+## 型ヒント
+- すべての関数とメソッドに型ヒントを記述すること
+- 戻り値の型も明示すること
+- `typing` モジュールを適切に使用すること（`List`, `Optional`, `Union` など）
+
+## Docstring
+- すべてのクラス、メソッド、関数にdocstringを記述すること
+- Google形式のdocstringを使用すること
+- Args、Returns、Raisesセクションを含めること
+
+例：
+```python
+def get_target_date(self) -> datetime | None:
+    """
+    対象日付を取得する
+
+    対象日時は以下を満たす必要がある
+    - 月曜日から金曜日の日にち
+    - 現在から12週間前の日にち
+
+    Args:
+        targetDate (str): 対象日付
+
+    Returns:
+        datetime: 対象日付
+        None: 対象日付が見つからない場合
+    """
+```
+
+## 命名規則
+- クラス名: PascalCase（例: `GetDailyQuantsService`）
+- 関数・メソッド名: snake_case（例: `get_daily_quants`）
+- 変数名: snake_case（例: `target_date`）
+- 定数: UPPER_SNAKE_CASE（例: `TABLE_NAME`）
+
+## インポート
+- 標準ライブラリ → サードパーティ → ローカルモジュールの順にインポート
+- 相対インポートを使用する場合は `..` を使用（例: `from ..domain.model import DailyQuants`）
+
+## 日付処理
+- `datetime` オブジェクトと文字列の変換に注意すること
+- 日付の形式は `'%Y-%m-%d'` または `'%Y%m%d'` を使用
+- 文字列から `datetime` への変換は `datetime.strptime()` を使用
+- `datetime` から文字列への変換は `datetime.strftime()` を使用
+
+## データ型
+- `dataclass` を使用してドメインモデルを定義すること
+- DynamoDBの数値型には `Decimal` ではなく文字列として保存すること（`'N': str(value)`）
