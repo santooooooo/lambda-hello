@@ -1,0 +1,60 @@
+---
+description: アーキテクチャパターンとレイヤー間のルール
+globs: ["aws-batch/**/*.py"]
+alwaysApply: false
+---
+
+# アーキテクチャルール
+
+## レイヤー構造
+
+### Domain層 (`domain/`)
+- **責務**: ビジネスロジックとドメインモデル
+- **含むもの**:
+  - ドメインモデル（`model/`）
+  - リポジトリインターフェース（`repository/`）
+  - ドメイン固有の型（`Either` など）
+  - ドメインサービス（ビジネスルールの実装）
+- **依存禁止**: 他のレイヤー（`usecase`, `infra`）に依存してはいけない
+- **ビジネスルール**: 純粋なビジネスルール（価格計算、検証ルール、ビジネスルールに基づく計算など）はこの層に実装する
+
+### Usecase層 (`usecase/`)
+- **責務**: ユースケースの実装、ビジネスロジックのオーケストレーション
+- **含むもの**:
+  - サービスクラス（`*_service.py`）
+- **依存許可**: `domain` 層のみ
+- **依存禁止**: `infra` 層に直接依存してはいけない
+- **オーケストレーション**: 複数のドメインオブジェクトやリポジトリを組み合わせてユースケースを実現する。純粋なビジネスルールはドメイン層に実装し、ここではそれらを組み合わせる
+
+### Infrastructure層 (`infra/`)
+- **責務**: 外部システムとの連携（API、データベース）
+- **含むもの**:
+  - リポジトリ実装（`*_repository_impl.py`）
+  - 外部APIクライアント
+- **依存許可**: `domain` 層のみ
+- **実装**: `domain` 層のインターフェースを実装する
+
+## リポジトリパターン
+- リポジトリインターフェースは `domain/repository/` に定義
+- リポジトリ実装は `infra/` に配置
+- サービスはインターフェースに依存し、実装には依存しない
+
+例：
+```python
+# domain/repository/xxx_repository.py
+class XxxRepository(ABC):
+    @abstractmethod
+    def some_method(self) -> SomeType:
+        pass
+
+# infra/xxx_repository_impl.py
+class XxxRepositoryImpl(XxxRepository):
+    def some_method(self) -> SomeType:
+        # 実装
+        pass
+
+# usecase/xxx_service.py
+class XxxService:
+    def __init__(self):
+        self.repository: XxxRepository = XxxRepositoryImpl()
+```
