@@ -62,15 +62,16 @@ class JquantsRepositoryImpl(JquantsRepository):
         if response.status_code == 200:
             jsonDailyQuants = response.json().get("daily_quotes")
             dailyQuantsList = [
-                DailyQuants(
-                    date=dailyQuants["Date"],
+                DailyQuants.from_api(
+                    date_str=dailyQuants["Date"],
                     code=dailyQuants["Code"],
                     open=dailyQuants["AdjustmentOpen"],
                     high=dailyQuants["AdjustmentHigh"],
                     low=dailyQuants["AdjustmentLow"],
                     close=dailyQuants["AdjustmentClose"],
                     volume=dailyQuants["AdjustmentVolume"]
-                ) for dailyQuants in jsonDailyQuants]
+                ) for dailyQuants in jsonDailyQuants
+            ]
             return dailyQuantsList
         else:
             self.error_handler(response)

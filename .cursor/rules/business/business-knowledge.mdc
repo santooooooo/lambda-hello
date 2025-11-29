@@ -25,7 +25,7 @@ alwaysApply: true
 ### 日次株価四本値（DailyQuants）
 - **定義**: 1日の株式取引における4つの価格（始値、高値、安値、終値）と出来高
 - **主要フィールド**:
-  - `date`: 日付（形式: `YYYY-MM-DD`）
+  - `date`: 日付（型: `int` = Unixエポック秒。JSTの当日00:00を表す秒数）
   - `code`: 銘柄コード
   - `open`: 始値
   - `high`: 高値
@@ -33,7 +33,7 @@ alwaysApply: true
   - `close`: 終値
   - `volume`: 出来高（売買高）
 - **データソース**: J-Quants API `/prices/daily_quotes`
-- **保存先**: DynamoDBテーブル `DailyQuants`（パーティションキー: `date`, ソートキー: `code`）
+- **保存先**: DynamoDBテーブル `DailyQuants`（パーティションキー: `date (Number)`, ソートキー: `code (String)`）
 
 ## ビジネスルール
 
@@ -65,7 +65,11 @@ alwaysApply: true
 - **本番環境**: AWS DynamoDBを使用
 - **テーブル**:
   - `StockInfo`: 銘柄情報を保存
-  - `DailyQuants`: 日次株価四本値を保存（パーティションキー: `date`, ソートキー: `code`）
+  - `DailyQuants`: 日次株価四本値を保存（パーティションキー: `date (Number)`, ソートキー: `code (String)`）
+
+### 日付表現のルール（DailyQuants）
+- J-Quants APIの `Date (YYYY-MM-DD)` は、保存時に「日本標準時（JST）当日00:00」に正規化し、Unixエポック秒（int）として保持する
+- 重複チェック・クエリも同一の基準（JST当日00:00のエポック秒）で評価する
 
 ## 処理フロー
 

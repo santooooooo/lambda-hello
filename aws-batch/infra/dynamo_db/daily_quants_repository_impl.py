@@ -5,7 +5,7 @@ from ...domain.model.daily_quants import DailyQuants
 import boto3
 from botocore.exceptions import ClientError
 from ...domain.either import Either, Left, Right
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 
@@ -46,7 +46,7 @@ class DailyQuantsRepositoryImpl(DailyQuantsRepository):
             'AttributeDefinitions': [
                 {
                     'AttributeName': 'date',
-                    'AttributeType': 'S'
+                    'AttributeType': 'N'
                 },
                 {
                     'AttributeName': 'code',
@@ -100,6 +100,7 @@ class DailyQuantsRepositoryImpl(DailyQuantsRepository):
             bool: 今日のデータが存在する場合はTrue、存在しない場合はFalse
         """
         try:
+            epoch_seconds = self.to_jst_midnight_epoch_seconds(date)
             response = self.dynamo_db.query(
                 TableName=self.table_name,
                 KeyConditionExpression='#date = :date',
@@ -107,7 +108,7 @@ class DailyQuantsRepositoryImpl(DailyQuantsRepository):
                     '#date': 'date'
                 },
                 ExpressionAttributeValues={
-                    ':date': {'S': date.strftime('%Y%m%d')}
+                    ':date': {'N': str(epoch_seconds)}
                 }
             )
             return Right(None) if response['Count'] > 0 else Left(None)
@@ -120,7 +121,7 @@ class DailyQuantsRepositoryImpl(DailyQuantsRepository):
             self.dynamo_db.put_item(
                 TableName=self.table_name,
                 Item={
-                    'date': {'S': daily_quant.date},
+                    'date': {'N': str(daily_quant.date)},
                     'code': {'S': daily_quant.code},
                     'open': {'N': self.none_to_zero(daily_quant.open)},
                     'high': {'N': self.none_to_zero(daily_quant.high)},
@@ -132,3 +133,11 @@ class DailyQuantsRepositoryImpl(DailyQuantsRepository):
 
     def none_to_zero(self, value: float) -> str:
         return '0.0' if value is None else str(round(value, 2))
+
+    def to_jst_midnight_epoch_seconds(self, dt: datetime) -> int:
+        """datetime を JST 当日00:00 のエポック秒へ正規化して返す"""
+        jst = timezone(timedelta(hours=9))
+        jst_dt = dt.astimezone(jst)
+        normalized = datetime(jst_dt.year, jst_dt.month,
+                              jst_dt.day, 0, 0, 0, tzinfo=jst)
+        return int(normalized.timestamp())
