@@ -7,9 +7,13 @@ load_dotenv()
 email = os.environ.get("JQUANTS_EMAIL")
 password = os.environ.get("JQUANTS_PASSWORD")
 is_test = os.environ.get("IS_TEST")
+execute_date = os.environ.get("EXECUTE_DATE")
 
-if email is None or password is None or is_test is None:
-    print("JQUANTS_EMAIL, JQUANTS_PASSWORD, または IS_TEST が設定されていません")
+print(f"is_test: {is_test}")
+print(f"execute_date: {execute_date}")
+
+if email is None or password is None or is_test is None or execute_date is None:
+    print("JQUANTS_EMAIL, JQUANTS_PASSWORD, または IS_TEST, EXECUTE_DATE が設定されていません")
     exit(1)
 
 # jquantsのAPIにPOSTリクエストを送信し、認証用トークンを取得
@@ -30,7 +34,7 @@ insertStockInfoListService.insert(stockList)
 
 # 株式四本値を取得
 getDailyQuantsService = get_daily_quants_service.GetDailyQuantsService()
-dailyQuantsList = getDailyQuantsService.get(idToken)
+dailyQuantsList = getDailyQuantsService.get(idToken, execute_date)
 
 print("株式四本値を保存します")
 insertDailyQuantsListService = insert_daily_quants_list_service.InsertDailyQuantsListService(
