@@ -19,7 +19,11 @@ RUN if [ -f Pipfile.lock ]; then \
     fi
 
 # 環境変数の設定
-ENV IS_TEST="False"
+ARG IS_TEST="False"
+ENV IS_TEST=${IS_TEST}
+# 実行日（JST, YYYY-MM-DD）。未指定や空なら従来ロジック（12週間前の平日）を使用
+ARG EXECUTE_DATE=""
+ENV EXECUTE_DATE=${EXECUTE_DATE}
 
 COPY ./aws-batch/ .
 

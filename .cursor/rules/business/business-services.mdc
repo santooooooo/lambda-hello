@@ -34,10 +34,12 @@ alwaysApply: false
 ### 4. GetDailyQuantsService
 - **責務**: 株式四本値をJ-Quants APIから取得する
 - **メソッド**:
-  - `get(idToken: str) -> List[DailyQuants] | None`: 株式四本値を取得
+  - `get(idToken: str, executeDateStr: Optional[str] = None) -> List[DailyQuants] | None`: 株式四本値を取得
   - `get_target_date() -> datetime | None`: 対象日付を計算
 - **ビジネスルール**:
-  - **対象日付の計算**: 現在から12週間前の日付で、かつ平日（月〜金）であること
+  - **EXECUTE_DATE 優先**: 環境変数 `EXECUTE_DATE`（形式: `YYYY-MM-DD`、JST）が指定されている場合、その日付を対象日付とする
+  - **週末スキップ**: `EXECUTE_DATE` が土日を指す場合は処理スキップ（`None` を返す）
+  - **デフォルト計算**: `EXECUTE_DATE` 未指定時は、現在から12週間前の日付で、かつ平日（月〜金）であること
   - 12週間前が土日の場合、`None` を返し、データ取得は実行されない
 - **データソース**: J-Quants API `/prices/daily_quotes?date=YYYYMMDD`
 - **依存**: `JquantsRepository`
@@ -51,7 +53,7 @@ alwaysApply: false
   - 同じ日付のデータが既に存在する場合は保存しない（重複チェック）
   - テーブルが存在しない場合は自動的に作成する
 - **依存**: `DailyQuantsRepository`
-- **注意**: 日付は文字列形式（`YYYY-MM-DD`）で渡されるが、リポジトリでは `datetime` オブジェクトに変換して使用
+- **注意**: 取得時は `datetime`（JST含む場合あり）を使用し、保存時は `DailyQuants.from_api` でJST 00:00のUnix秒に正規化される
 
 ## 機能変更時の注意事項
 
