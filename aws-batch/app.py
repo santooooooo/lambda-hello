@@ -9,7 +9,7 @@ password = os.environ.get("JQUANTS_PASSWORD")
 is_test = os.environ.get("IS_TEST")
 execute_date = os.environ.get("EXECUTE_DATE")
 
-print(f"is_test: {is_test}")
+print(f"is_test: {is_test}"
 print(f"execute_date: {execute_date}")
 
 if email is None or password is None or is_test is None or execute_date is None:
@@ -17,26 +17,26 @@ if email is None or password is None or is_test is None or execute_date is None:
     exit(1)
 
 # jquantsのAPIにPOSTリクエストを送信し、認証用トークンを取得
-getJquantsTemporaryTokenService = get_jquants_temporary_token_service.GetJquantsTemporaryTokenService()
-token = getJquantsTemporaryTokenService.get_token(email, password)
+getJquantsTemporaryTokenService=get_jquants_temporary_token_service.GetJquantsTemporaryTokenService()
+token=getJquantsTemporaryTokenService.get_token(email, password)
 
-idToken = getJquantsTemporaryTokenService.get_id_token(token)
+idToken=getJquantsTemporaryTokenService.get_id_token(token)
 
 # 上場銘柄一覧を取得
-getStockListService = get_stock_list_service.GetStockListService()
-stockList = getStockListService.get(idToken)
+getStockListService=get_stock_list_service.GetStockListService()
+stockList=getStockListService.get(idToken)
 
 # 上場銘柄一覧を保存
 print("上場銘柄一覧を保存します")
-insertStockInfoListService = insert_stock_info_list_service.InsertStockInfoListService(
+insertStockInfoListService=insert_stock_info_list_service.InsertStockInfoListService(
     isTest=is_test)
 insertStockInfoListService.insert(stockList)
 
 # 株式四本値を取得
-getDailyQuantsService = get_daily_quants_service.GetDailyQuantsService()
-dailyQuantsList = getDailyQuantsService.get(idToken, execute_date)
+getDailyQuantsService=get_daily_quants_service.GetDailyQuantsService()
+dailyQuantsList=getDailyQuantsService.get(idToken, execute_date)
 
 print("株式四本値を保存します")
-insertDailyQuantsListService = insert_daily_quants_list_service.InsertDailyQuantsListService(
+insertDailyQuantsListService=insert_daily_quants_list_service.InsertDailyQuantsListService(
     isTest=is_test)
 insertDailyQuantsListService.insert(dailyQuantsList)
