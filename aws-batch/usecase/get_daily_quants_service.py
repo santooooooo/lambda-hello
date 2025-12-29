@@ -15,8 +15,7 @@ class GetDailyQuantsService:
         """
         株式四本値を取得する
 
-        環境変数 EXECUTE_DATE が指定されている場合はその日付（JST）を対象日付とする。
-        未指定の場合は既存のルール（現在から12週間前の平日）で対象日付を算出する。
+        環境変数 EXECUTE_DATE が指定されている場合は現在から12週間前の平日で対象日付を算出する。
         いずれの方法でも土日を指す場合は処理をスキップする（None を返す）。
         """
         targetDate = self._resolve_target_date(executeDateStr)
@@ -28,16 +27,22 @@ class GetDailyQuantsService:
 
     def _resolve_target_date(self, executeDateStr: Optional[str]) -> Optional[datetime]:
         """
-        対象日付を解決する。優先順位:
-        1) executeDateStr（JST, YYYY-MM-DD）
-        2) 12週間前の平日（ローカル時刻基準）
+        対象日付を解決する。
+        EXECUTE_DATE（JST, YYYY-MM-DD）を実行日として受け取り、
+        その日付から12週間前の日付（平日のみ）を対象日付として返す。
+
+        EXECUTE_DATE が未指定の場合はエラーとする。
         """
-        if executeDateStr and executeDateStr.strip():
-            parsed = self._parse_execute_date_jst(executeDateStr.strip())
-            if parsed is None:
-                print("EXECUTE_DATE が土日、または不正な形式のため処理をスキップします")
-            return parsed
-        return self.get_target_date()
+        if not executeDateStr or not executeDateStr.strip():
+            raise ValueError("EXECUTE_DATE が設定されていません")
+
+        execute_dt_jst = self._parse_execute_date_jst(executeDateStr.strip())
+        if execute_dt_jst is None:
+            print("EXECUTE_DATE が土日、または不正な形式のため処理をスキップします")
+            return None
+
+        target_dt = execute_dt_jst - timedelta(weeks=12)
+        return self._weekday_or_none(target_dt)
 
     def _parse_execute_date_jst(self, date_str: str) -> Optional[datetime]:
         """
