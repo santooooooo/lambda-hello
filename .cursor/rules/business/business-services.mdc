@@ -37,10 +37,9 @@ alwaysApply: false
   - `get(idToken: str, executeDateStr: Optional[str] = None) -> List[DailyQuants] | None`: 株式四本値を取得
   - `get_target_date() -> datetime | None`: 対象日付を計算
 - **ビジネスルール**:
-  - **EXECUTE_DATE 優先**: 環境変数 `EXECUTE_DATE`（形式: `YYYY-MM-DD`、JST）が指定されている場合、その日付を対象日付とする
-  - **週末スキップ**: `EXECUTE_DATE` が土日を指す場合は処理スキップ（`None` を返す）
-  - **デフォルト計算**: `EXECUTE_DATE` 未指定時は、現在から12週間前の日付で、かつ平日（月〜金）であること
-  - 12週間前が土日の場合、`None` を返し、データ取得は実行されない
+  - **EXECUTE_DATE 必須**: 環境変数 `EXECUTE_DATE`（形式: `YYYY-MM-DD`、JST）を実行日として必ず指定する（未指定の場合はエラー）
+  - **対象日付の算出**: 対象日付は、実行日（JST）から12週間前の日付とする
+  - **週末スキップ**: 実行日または算出された対象日付が土日を指す場合は処理スキップ（`None` を返す）
 - **データソース**: J-Quants API `/prices/daily_quotes?date=YYYYMMDD`
 - **依存**: `JquantsRepository`
 
@@ -58,7 +57,7 @@ alwaysApply: false
 ## 機能変更時の注意事項
 
 ### 対象日付の計算ルールを変更する場合
-- **影響範囲**: `GetDailyQuantsService.get_target_date()`
+- **影響範囲**: `GetDailyQuantsService._resolve_target_date()`
 - **確認事項**:
   - 新しい計算ルールがビジネス要件を満たしているか
   - 平日チェックのロジックが正しいか
